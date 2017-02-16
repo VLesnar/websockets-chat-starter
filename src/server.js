@@ -68,6 +68,10 @@ const onMsg = (sock) => {
 // Checks if the user wants to roll a die
     if (text.startsWith('/roll')) {
       const val = text.slice(6);
+      Number(val);
+      if (isNaN(val) || val === '' || val === ' ' || val === '0') {
+        return;
+      }
       const roll = Math.floor((Math.random() * val) + 1);
       text = `${socket.name} rolls a ${roll} on a ${val} sided die`;
     }
