@@ -24,13 +24,14 @@ const onJoined = (sock) => {
   const socket = sock;
 
   socket.on('join', (data) => {
+// Add user to users object
+    socket.name = data.name;
+    users[socket.name] = socket.name;
+
     const joinMsg = {
       name: 'server',
       msg: `There are ${Object.keys(users).length} users online`,
     };
-
-    socket.name = data.name;
-    socket.emit('msg', joinMsg);
 
     socket.join('room1');
 
@@ -38,10 +39,11 @@ const onJoined = (sock) => {
       name: 'server',
       msg: `${data.name} has joined the room`,
     };
-    socket.broadcast.to('room1').emit('msg', response);
 
     console.log(`${data.name} joined`);
     socket.emit('msg', { name: 'server', msg: 'You joined the room' });
+    socket.broadcast.to('room1').emit('msg', response);
+    io.sockets.in('room1').emit('msg', joinMsg);
   });
 };
 
@@ -49,12 +51,29 @@ const onMsg = (sock) => {
   const socket = sock;
 
   socket.on('msgToServer', (data) => {
-    io.sockets.in('room1').emit('msg', { name: socket.name, msg: data.msg });
+// Checks if the user wants to signify an action
+    let text = data.msg;
+    if (text.startsWith('/me')) {
+      text = text.replace('/me', socket.name);
+    }
+
+    io.sockets.in('room1').emit('msg', { name: socket.name, msg: text });
   });
 };
 
 const onDisconnect = (sock) => {
   const socket = sock;
+
+  socket.on('disconnect', () => {
+    const response = {
+      name: 'server',
+      msg: `${socket.name} has left the room`,
+    };
+
+    socket.broadcast.to('room1').emit('msg', response);
+
+    delete users[socket.name];
+  });
 };
 
 io.sockets.on('connection', (socket) => {

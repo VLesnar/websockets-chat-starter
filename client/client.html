@@ -17,11 +17,10 @@
 			const message = document.querySelector("#message");
 			const chat = document.querySelector("#chat");
 			const socket = io.connect();
-			
+			let user = document.querySelector("#username").value;
+
 			socket.on('connect', () => {
 				console.log('connecting');
-				
-				let user = document.querySelector("#username").value;
 				
 				if(!user) {
 					user = 'unknown';
@@ -32,11 +31,19 @@
 			
 			socket.on('msg', (data) => {
 				console.log(data);
+				chat.value += "\n" + data.msg;
 			});
-		};
+			
+						
+			const send = document.querySelector("#send");
 
-		const sendMessage = () => {
-			console.log("success");	
+			send.addEventListener('click', function() {
+				socket.emit('msgToServer', {name: user, msg: document.querySelector("#message").value});
+			});
+			
+			socket.on('disconnect', () => {
+				socket.emit('disconnect', {name : user });
+			})
 		};
 
 		const init = () => {
