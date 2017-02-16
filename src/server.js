@@ -1,3 +1,12 @@
+/* EXTRA FEATURES
+/* 1. Typing in "/me" signifies an "action" for the user i.e.
+/*    "/me dances" emits to the room as "[username] dances"
+/* 2. Typing in "/roll [#]" will "roll a die" and emit
+/*    the results to the room; The number can be any
+/*    size and uses the Math.Floor(Math.Random()) functions
+/* 3. Typing in "/time" returns the current date and time using
+/*    a Date object */
+
 const http = require('http');
 const fs = require('fs');
 const socketio = require('socket.io');
@@ -55,6 +64,18 @@ const onMsg = (sock) => {
     let text = data.msg;
     if (text.startsWith('/me')) {
       text = text.replace('/me', socket.name);
+    }
+// Checks if the user wants to roll a die
+    if (text.startsWith('/roll')) {
+      const val = text.slice(6);
+      const roll = Math.floor((Math.random() * val) + 1);
+      text = `${socket.name} rolls a ${roll} on a ${val} sided die`;
+    }
+// Checks if the user wants to get the time (emits only to user)
+    if (text.startsWith('/time')) {
+      const time = new Date();
+      socket.emit('msg', { name: 'server', msg: `It is ${time}` });
+      return;
     }
 
     io.sockets.in('room1').emit('msg', { name: socket.name, msg: text });
